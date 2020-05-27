@@ -19,38 +19,47 @@ def summarize_text (text, num_sent):
 
     clean_text = preprocess (text)
 
-    sentences = nltk.sent_tokenize (text)
+    def textTokenize(text):
+        sentences = nltk.sent_tokenize (text)
+        return sentences
 
     # Remove stop words and create a dictionary of word-count
-    stop_words = nltk.corpus.stopwords.words('english')
+    def stopWords():
+        stop_words = nltk.corpus.stopwords.words('english')
+        return stop_words
 
-    word_count_dict = {}
+    def getWordCount():
+        word_count_dict = {}
+        for word in nltk.word_tokenize(clean_text):
+            if word not in stopWords():
+                if word not in word_count_dict.keys():
+                    word_count_dict[word] = 1
+                else:
+                    word_count_dict[word] += 1
+        return word_count_dict
 
-    for word in nltk.word_tokenize(clean_text):
-        if word not in stop_words:
-            if word not in word_count_dict.keys():
-                word_count_dict[word] = 1
-            else:
-                word_count_dict[word] += 1
+    
+
+    
 
     # Find the total number of terms (not necessarily unique) = sum of values in the word_count_dict
-    total_terms = sum(word_count_dict[term] for term in word_count_dict)
+    total_terms = sum(getWordCount()[term] for term in getWordCount())
 
     # Normalize the word-frequency dictionary (weighted word count matrix/dictionary)
-    for key in word_count_dict.keys():
-        word_count_dict[key] = word_count_dict[key]/total_terms
+    for key in getWordCount().keys():
+        getWordCount()[key] = getWordCount()[key]/total_terms
         
     # Create sentece scores
     sentence_score_dict = {}
-    for sentence in sentences:
+    for sentence in textTokenize(text):
         for word in nltk.word_tokenize(sentence.lower()):
-            if word in word_count_dict.keys():
+            if word in getWordCount().keys():
                 # Now here's a problem, very long sentences will always have high scores, so here we can ignore very long sentences
                 if len(sentence.split(' ')) < 20: # ignore sentences having words more than 20
                     if sentence not in sentence_score_dict.keys():
-                        sentence_score_dict[sentence] = word_count_dict[word]
+                        sentence_score_dict[sentence] = getWordCount()[word]
                     else:
-                        sentence_score_dict[sentence] += word_count_dict[word]
+                        sentence_score_dict[sentence] += getWordCount()[word]
 
     # Get the summary
     summary = heapq.nlargest(num_sent, sentence_score_dict, key=sentence_score_dict.get)
